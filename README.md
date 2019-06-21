@@ -7,4 +7,5 @@ How data science incorporate with marketing strategy? How to personalize adverti
 
 In sum, social media API helps our company to successfully understand and target the audience. However, it might also raise the concern of data privacy. We need to be careful and conscious about the way we use data.
 
-Please download the html file and open it locally on your browser for the slides.
+
+- Please download the html file and open it locally on your browser for the slides.
