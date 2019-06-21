@@ -1,0 +1,245 @@
+---
+title: "Social Media API"
+subtitle: "Use API to Target Audience"
+author: "Szumin Yu, Data Scientist at DKC"
+date: "6/28/2019"
+output: 
+  ioslides_presentation:
+    incremental: true
+    widescreen: true
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE)
+```
+
+```{r load library, echo=FALSE, results='hide', message=F, warning=F}
+options(stringsAsFactors = FALSE)
+options(scipen = 999)
+library(tidyverse)
+```
+
+## Trust me, I know
+```{r echo=F,fig.align='center', out.height='50%', out.width='50%'}
+knitr::include_graphics('fb.gif')
+```
+
+## Facebook marketing API {.build}
+- creat, read, update, and delete custom audiences, images, campaigns, adsets, ads, and related content
+
+```{r echo = FALSE, message = F, fig.align='center', out.height='80%', out.width='80%'}
+knitr::include_graphics('marketing_api.png')
+```
+
+## Create a Facebook App to Get Token {.build}
+- Make sure you log in your facebook
+- Register as a developer
+- Add a new app https://developers.facebook.com/apps
+- Type in a unique display name and provide your email address. Click "Create App ID"
+- Select a Scenario: click "Implement Marketing API"
+- In the sidebar, select "Tools" from the "Marketing API" and generate a token
+
+## Here's the video 
+```{r echo = FALSE, message = F, fig.align='center', out.height='100%', out.width='100%'}
+knitr::include_graphics('video.mov')
+```
+
+## Authorization {.smaller}
+```{r eval=FALSE}
+devtools::install_github('daroczig/fbRads')
+```
+
+```{r}
+library(fbRads)
+
+#load token
+token = readRDS('token.rds')
+#use token to get your account id
+accounts = fbad_get_my_ad_accounts(token, version = '3.3')
+```
+
+```{r}
+#get your account id
+account = sample(accounts$account_id,1)
+
+# initiate your FB Marketing API
+fbad_init(accountid = account, token = token, version= '3.3')
+```
+
+## Audience insights from FB {.build}
+- https://www.facebook.com/ads/audience-insights
+
+```{r echo = FALSE, message = F, fig.align='center', out.height='80%', out.width='80%'}
+knitr::include_graphics('fb_insights.png')
+```
+
+
+## Start targeting {.build}
+- Open Facebook Ads Manager https://www.facebook.com/adsmanager/creation
+- It's a platform where you can create a new campaign and see the audience size w/o actually pay
+- Let's demo!
+
+
+
+## Detailed targeting {.build}
+- Basic and core targeting https://developers.facebook.com/docs/marketing-api/buying-api/targeting
+- Targeting search https://developers.facebook.com/docs/marketing-api/targeting-search/v2.8
+- You can target everything that is on Facebook Marketing API
+- Geographics: countries, regions, geo areas, cites; zip codes; DMA markets; electoral districts
+- Interests
+- Behaviors
+- Demographics: income, gender, marriage status, employer, race, etc
+
+
+## Target your audience {.build}
+- Number of programmers on Facebook 
+```{r }
+prog = fbad_get_search(q = 'programming language', type = 'adinterest')
+prog %>% arrange(desc(audience_size)) %>% head()
+```
+
+## The size of audience {.build}
+- US-based python users on Facebook
+```{r}
+#get ids and names for python users
+python = prog %>% slice(4)
+#get numbers
+fbad_reachestimate(targeting_spec = list(
+  geo_locations = list(countries = 'US'),
+  flexible_spec = list(
+    list(interests = data.frame(
+      id = python$id,
+      name = python$name))
+  )
+))$users
+```
+## The size of audience (Continued) {.build}
+- How about US-based R users?
+```{r}
+r = prog %>% slice(15)
+
+fbad_reachestimate(targeting_spec = list(
+  geo_locations = list(countries = 'US'),
+  flexible_spec = list(
+    list(interests = data.frame(
+      id = r$id,
+      name = r$name))
+  )
+))$users
+```
+
+## Targeting by demographics{.build}
+- Income
+```{r}
+income = fbad_get_search(q = 'income', type = 'targetingsearch')[1:4,1:2]
+income
+```
+
+## Income function example {.smaller}
+```{r}
+fb_income_eg <- function(interest_id, interest_name){
+  id <- c("6107813079183","6107813551783", "6107813553183","6107813554583")
+  name <- c("Top 5%","Top 10%","Top 10%-25%", "Top 25%-50%")
+  
+  income <- purrr::map(1:length(id),function(i)
+    fbad_reachestimate(targeting_spec = list(
+      geo_locations = list(countries = 'US'),
+      flexible_spec = list(
+        list(interests = data.frame(
+          id = interest_id,
+          name = interest_name
+        )),
+        list(income = data.frame(
+          id = id[i],
+          name = name[i]
+        ))
+      )
+    ))$users)
+  
+  data_frame <- as.data.frame(cbind(name, income))
+  colnames(data_frame) <- c("Income Level", "Count")
+  return(data_frame)
+}
+```
+## Get results {.smaller}
+```{r }
+income_table = fb_income_eg('6003682002118', 'Python (programming language)')
+```
+```{r echo=FALSE}
+knitr::kable(income_table)
+```
+
+## Python module {.build}
+- Facebook python business SDK https://github.com/facebook/facebook-python-business-sdk
+```{python eval = F}
+
+from facebook_business.adobjects.adaccount import AdAccount
+from facebook_business.adobjects.adset import AdSet
+from facebook_business.api import FacebookAdsApi
+
+access_token = '<ACCESS_TOKEN>'
+app_secret = '<APP_SECRET>'
+app_id = '<APP_ID>'
+id = '<AD_ACCOUNT_ID>'
+FacebookAdsApi.init(access_token=access_token)
+
+```
+
+## Python sample code {.smaller}
+```{python eval = F}
+
+fields = [
+]
+params = {
+  'name': 'My First AdSet',
+  'daily_budget': '10000',
+  'bid_amount': '300',
+  'billing_event': 'IMPRESSIONS',
+  'optimization_goal': 'REACH',
+  'campaign_id': '<adCampaignLinkClicksID>',
+  'promoted_object': {'page_id':'<pageID>'},
+  'targeting': {'geo_locations':{'countries':['US'],'regions':[{'key':'4081'}],
+                'cities':[{'key':777934,'radius':10,'distance_unit':'mile'}]},
+                'genders':[1],'age_max':24,'age_min':20,
+                'publisher_platforms':['facebook','audience_network'],
+                'device_platforms':['mobile'],
+  'flexible_spec':[{'interests':[{'id':'<adsInterestID>','name':'<adsInterestName>'}]}]},
+  'status': 'PAUSED',
+}
+print AdAccount(id).create_ad_set(
+  fields=fields,
+  params=params,
+)
+
+
+```
+
+## Next step{.build}
+- Once you know who and where you target, you can create campaign
+- Facebook will put your ads to the specific audience you set
+
+```{r echo = FALSE, message = F, fig.align='center', out.height='40%', out.width='40%'}
+knitr::include_graphics('ads.png')
+```
+
+## 
+```{r echo = FALSE, message = F, fig.align='center', out.height='80%', out.width='80%'}
+knitr::include_graphics('giphy.gif')
+```
+
+## Caveat
+- Human bias leads to data bias
+- Data Privacy
+
+## Other Social Media API
+- Instagram Private API (Python): https://github.com/ping/instagram_private_api
+- Twitter API (R and Python): twitteR; python-twitter etc.
+- Reddit API (Python): praw https://github.com/praw-dev/praw
+
+
+## Thank You! 
+- Special thanks to the former developer/data scientist at DKC, Harro Cyranka `r emo::ji('thumb')`
+
+- Instagram, Facebook, Twitter @suminisweird
+- Github, Linkedin @szuminyu
