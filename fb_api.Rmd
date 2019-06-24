@@ -32,10 +32,11 @@ knitr::include_graphics('fb.gif')
 knitr::include_graphics('marketing_api.png')
 ```
 
-## Create a Facebook App to Get Token {.build}
+## Create a Facebook app to get token {.build}
 - Make sure you log in your facebook
+- Open https://developers.facebook.com/apps 
 - Register as a developer
-- Add a new app https://developers.facebook.com/apps
+- Add a new app 
 - Type in a unique display name and provide your email address. Click "Create App ID"
 - Select a Scenario: click "Implement Marketing API"
 - In the sidebar, select "Tools" from the "Marketing API" and generate a token
@@ -100,7 +101,7 @@ prog %>% arrange(desc(audience_size)) %>% head()
 ```
 
 ## The size of audience {.build}
-- US-based python users on Facebook
+- US-based python users 
 ```{r}
 #get ids and names for python users
 python = prog %>% slice(4)
@@ -138,11 +139,11 @@ income
 
 ## Income function example {.smaller}
 ```{r}
-fb_income_eg <- function(interest_id, interest_name){
-  id <- c("6107813079183","6107813551783", "6107813553183","6107813554583")
-  name <- c("Top 5%","Top 10%","Top 10%-25%", "Top 25%-50%")
+fb_income_eg = function(interest_id, interest_name){
+  id = c("6107813079183","6107813551783", "6107813553183","6107813554583")
+  name = c("Top 5%","Top 10%","Top 10%-25%", "Top 25%-50%")
   
-  income <- purrr::map(1:length(id),function(i)
+  income = purrr::map(1:length(id),function(i)
     fbad_reachestimate(targeting_spec = list(
       geo_locations = list(countries = 'US'),
       flexible_spec = list(
@@ -157,8 +158,8 @@ fb_income_eg <- function(interest_id, interest_name){
       )
     ))$users)
   
-  data_frame <- as.data.frame(cbind(name, income))
-  colnames(data_frame) <- c("Income Level", "Count")
+  data_frame = as.data.frame(cbind(name, income))
+  colnames(data_frame) = c("Income Level", "Count")
   return(data_frame)
 }
 ```
@@ -170,7 +171,7 @@ income_table = fb_income_eg('6003682002118', 'Python (programming language)')
 knitr::kable(income_table)
 ```
 
-## Python module {.build}
+## Python library {.build}
 - Facebook python business SDK https://github.com/facebook/facebook-python-business-sdk
 ```{python eval = F}
 
@@ -216,7 +217,7 @@ print AdAccount(id).create_ad_set(
 ```
 
 ## Next step{.build}
-- Once you know who and where you target, you can create campaign
+- Once you know who and where you target, you can create a campaign(s)
 - Facebook will put your ads to the specific audience you set
 
 ```{r echo = FALSE, message = F, fig.align='center', out.height='40%', out.width='40%'}
@@ -232,10 +233,17 @@ knitr::include_graphics('giphy.gif')
 - Human bias leads to data bias
 - Data Privacy
 
-## Other Social Media API
-- Instagram Private API (Python): https://github.com/ping/instagram_private_api
+## Instagram private API
+- https://github.com/ping/instagram_private_api
+- Get feeds (users, location, tag, popular feeds, etc)
+- Posts photo/video to your feed or stories
+- Get, post, delete, like comments
+- User stories
+
+## Other social media API
 - Twitter API (R and Python): twitteR; python-twitter etc.
 - Reddit API (Python): praw https://github.com/praw-dev/praw
+
 
 
 ## Thank You! 
